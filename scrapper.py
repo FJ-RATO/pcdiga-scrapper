@@ -1,9 +1,12 @@
 from helium import *
 from bs4 import BeautifulSoup
 from time import sleep
+from datetime import date
+from colorama import Fore
 
 search = "&pagina="
 url = "https://www.pcdiga.com/campanhas-e-ofertas/campanha/black-november?category=componentes"
+TODAY = date.today().strftime("%Y%m%d")
 
 def getFinalPageIndex(url):
     browser = start_firefox(url,headless=True)
@@ -17,9 +20,7 @@ def getFinalPageIndex(url):
 def getInfo(url):
     browser = start_firefox(url,headless=True)
     soup = BeautifulSoup(browser.page_source,'html.parser')
-
     items = soup.find_all('div',{'class':'flex flex-col bg-background-off p-1.5 md:p-3 rounded-r4'})
-
     info = []
 
     for item in items:
@@ -27,17 +28,22 @@ def getInfo(url):
         price = item.find('div',{'class':'text-lg font-extrabold md:text-2xl text-primary'}).text
         info.append((title,price))
     
-    print("Saving...")
-    save = open("./save","a")
-    save.write("\n")
-    save.write(str(info))
-    save.close
-    print("Done")
     kill_browser()
+    save(info)
+     
+def save(data):
+    print(f"Saving",end = "")
+    save = open(f"./save{TODAY}","a")
+    for item in data:
+        print(f".",end = "")
+        save.write(str(item))
+        save.write(f"\n")
+    save.close
+    print(f"Done")
 
 index = int(getFinalPageIndex(url))+1
 for i in range(1,index):
     print(f"Getting page {i}")
     getInfo(url+search+str(i))
     sleep(1)
-    
+print(Fore.GREEN+"SCRAPE WAS SUCCESSFUL")
